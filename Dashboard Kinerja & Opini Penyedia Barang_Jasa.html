@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Kinerja & Opini Penyedia Barang/Jasa</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#6b7385;--bd:#e2e5ea;--red:#d71920;--g:#1d9a5b;--b:#2f6fde;--y:#d9a100;--o:#e07b1a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1d222b;--tx:#e8eaf0;--mut:#9aa2b3;--bd:#2c3340}}
+:root[data-theme="dark"]{--bg:#14171d;--card:#1d222b;--tx:#e8eaf0;--mut:#9aa2b3;--bd:#2c3340}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.app{display:flex;min-height:100vh}
+nav{width:220px;background:var(--card);border-right:1px solid var(--bd);padding:16px 10px;flex-shrink:0}
+nav h1{font-size:13px;margin:0 8px 14px;color:var(--red);letter-spacing:.3px}
+nav button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--tx);padding:9px 10px;border-radius:8px;font:inherit;cursor:pointer;margin-bottom:2px}
+nav button.on{background:var(--red);color:#fff}
+main{flex:1;padding:20px;min-width:0}
+h2{margin:0 0 4px;font-size:20px}.sub{color:var(--mut);margin-bottom:16px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.kpi small{color:var(--mut);display:block;font-size:12px}.kpi b{font-size:24px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-bottom:16px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tabs button,.chips button,select{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:7px 12px;border-radius:20px;font:inherit;cursor:pointer}
+.tabs button.on,.chips button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{color:var(--mut);font-weight:600;font-size:12px}
+tr.cl{cursor:pointer}tr.cl:hover{background:var(--bg)}
+.bd{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600;color:#fff}
+.s5{background:var(--g)}.s4{background:var(--b)}.s3{background:var(--y)}.s2{background:var(--o)}.s1{background:var(--red)}.s0{background:var(--mut)}
+.bar{display:flex;align-items:center;gap:8px;margin:7px 0}.bar span:first-child{width:92px;font-size:12px}
+.bar i{display:block;height:12px;border-radius:6px;min-width:2px}.bar .t{flex:1;background:var(--bg);border-radius:6px}
+.big{font-size:38px;font-weight:700}.note{font-size:12px;color:var(--mut);margin-top:8px}
+@media(max-width:760px){.app{flex-direction:column}nav{width:100%;display:flex;overflow-x:auto;gap:4px;padding:8px}nav h1{display:none}nav button{white-space:nowrap;width:auto}}
+</style></head><body>
+<div class="app"><nav><h1>HK • SCM Rekanan</h1><div id="menu"></div></nav><main id="main"></main></div>
+<script>
+const K=[null,'Sangat Kurang','Kurang','Cukup','Baik','Sangat Baik'];
+const V=[['PT Karya Nusa Mandiri','BU','Kontraktor / Subkontraktor'],['CV Bumi Raya Supply','BU','Supplier'],['PT Sigma Rekayasa Konsultan','BU','Jasa Konsultansi'],['PT Alat Berat Prima','BU','Alat'],['PT Lintas Jasa Utama','BU','Jasa Lainnya'],['PT Beton Perkasa','BU','Supplier'],['PT Garuda Konstruksi','BU','Kontraktor / Subkontraktor'],['CV Tirta Baja','BU','Kontraktor / Subkontraktor'],['Budi Santoso (Mandor)','PR','Kontraktor / Subkontraktor'],['Agus Salim (Mandor)','PR','Kontraktor / Subkontraktor'],['Sri Wahyuni','PR','Jasa Konsultansi'],['Hendra Gunawan','PR','Jasa Lainnya']];
+const KL=['Supplier','Kontraktor / Subkontraktor','Alat','Jasa Konsultansi','Jasa Lainnya'];
+const PW=[['Mutu',[40,25,25,30,30]],['Waktu & Pemenuhan',[25,20,15,20,25]],['HSSE',[15,15,25,0,10]],['Kapabilitas & Sumber Daya',[0,10,10,30,10]],['Metode & Teknis',[5,15,10,5,10]],['Layanan & Responsivitas',[10,10,10,10,10]],['Administrasi & Kepatuhan',[5,5,5,5,5]]];
+const AS=[['Pendaftaran Rekanan',20],['Proses Pengadaan',25],['Pelaksanaan Pekerjaan',25],['Akuntabilitas',15],['Serah Terima',15]];
+// [no kontrak, vendor, divisi, nilai (Rp Miliar), skor kinerja|null, aspek opini|null, tindak lanjut|null]
+const C=[
+['K-001',0,'Divisi Infrastruktur I',48.5,91.2,[5,4,5,5,4],null],
+['K-002',1,'Divisi Gedung',6.2,84.0,[4,4,4,3,4],['SLA pembayaran terlambat','Verifikasi dokumen manual & berlapis','Digitalisasi verifikasi dokumen','Manager Keuangan Proyek','3 bulan','Dalam progres']],
+['K-003',2,'Kantor Pusat',2.1,78.5,[3,3,4,3,3],['Klarifikasi dokumen pemilihan lambat','Tim pengadaan terbatas','Buat SLA klarifikasi 2 hari kerja','VP SCM','1 bulan','Open']],
+['K-004',3,'Divisi EPC',12.8,88.3,[5,5,4,5,5],null],
+['K-005',4,'Unit Pengadaan Jalan Tol',3.4,null,null,null],
+['K-006',5,'Divisi Infrastruktur II',22.0,62.0,[2,3,2,3,3],['Koordinasi lintas fungsi lambat','Rapat koordinasi tidak rutin','Weekly coordination meeting','Project Manager','1 bulan','Closed']],
+['K-007',6,'Divisi Infrastruktur I',95.0,93.8,[4,3,3,4,3],['Proses VO/addendum lama','Approval bertingkat','Sederhanakan alur VO','VP Operasi','2 bulan','Dalam progres']],
+['K-008',7,'Divisi Gedung',8.7,null,null,null],
+['K-009',0,'Divisi EPC',31.0,72.4,[1,2,2,2,1],['Pembayaran termin tidak tepat waktu','Dokumen tagihan sering revisi','Checklist dokumen tagihan & pelatihan','Manager Keuangan Proyek','3 bulan','Open']],
+['K-010',6,'Divisi Infrastruktur II',54.2,null,null,null],
+['K-011',2,'Divisi Infrastruktur I',1.8,81.0,[4,5,4,4,4],null],
+['K-012',3,'Unit Pengadaan Jalan Tol',9.5,55.0,[3,2,3,3,2],['Serah terima & final payment lambat','BAST menunggu banyak tanda tangan','E-sign BAST','Fungsi Manajemen Kontrak','2 bulan','Dalam progres']],
+['K-013',8,'Divisi Infrastruktur I',0.45,86.0,[5,4,4,5,4],null],
+['K-014',9,'Divisi Gedung',0.30,null,null,null],
+['K-015',10,'Kantor Pusat',0.18,79.0,null,null],
+['K-016',11,'Divisi EPC',0.22,null,null,null]];
+const $=s=>document.querySelector(s);
+const kinCat=x=>x==null?['Belum dinilai',0]:x>90?['Sangat Baik',5]:x>=80?['Baik',4]:x>=65?['Cukup',3]:x>=50?['Buruk',2]:['Sangat Buruk',1];
+const ikr=a=>a?a.reduce((s,v,i)=>s+v*20*AS[i][1],0)/100:null;
+const ikrCat=x=>x==null?['Belum ada',0]:x>=85?['A – Sangat Baik',5]:x>=70?['B – Baik',4]:x>=55?['C – Cukup',3]:['D – Kurang',2];
+const lvl=x=>Math.max(1,Math.min(5,Math.round(x/20)));
+const bd=(t,l)=>`<span class="bd s${l}">${t}</span>`;
+const rows=C.map(c=>({no:c[0],v:V[c[1]],vi:c[1],div:c[2],nilai:c[3],kin:c[4],as:c[5],ikr:ikr(c[5]),tl:c[6]}));
+const divs=[...new Set(rows.map(r=>r.div))];
+const fx=n=>n.toLocaleString('id-ID',{maximumFractionDigits:1});
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+let view='ringkasan',tab='kin',lv=0,dv=divs[0],open=null;
+const M=[['ringkasan','Ringkasan'],['BU','Kontrak Badan Usaha'],['PR','Kontrak Perorangan / Mandor'],['divisi','Per Divisi (Tindak Lanjut)']];
+function menu(){$('#menu').innerHTML=M.map(m=>`<button class="${view==m[0]?'on':''}" onclick="view='${m[0]}';open=null;draw()">${m[1]}</button>`).join('')}
+function dist(list,fn){const n=[0,0,0,0,0,0];list.forEach(x=>n[fn(x)]++);return n}
+function bars(n,tot,sel){return [5,4,3,2,1].map(l=>{const p=tot?n[l]/tot*100:0;return `<div class="bar" style="${sel&&sel!=l?'opacity:.35':''}"><span>Level ${l} · ${K[l]}</span><span class="t"><i class="s${l}" style="width:${p}%"></i></span><b>${fx(p)}%</b><small>(${n[l]})</small></div>`}).join('')}
+function ringkasan(){
+const vs=[...new Set(rows.map(r=>r.vi))],bu=vs.filter(i=>V[i][1]=='BU').length,pr=vs.length-bu;
+const kb=rows.filter(r=>r.v[1]=='BU').length,kp=rows.length-kb;
+const op=rows.filter(r=>r.as),nop=rows.length-op.length;
+const dn=new Set(rows.filter(r=>r.kin!=null).map(r=>r.vi)).size;
+const hk=avg(op.map(r=>r.ikr)),hc=ikrCat(hk);
+const k=[['Total Rekanan',vs.length],['Rekanan Badan Usaha',bu],['Rekanan Perorangan',pr],['Total Kontrak',rows.length],['Kontrak Badan Usaha',kb],['Kontrak Perorangan',kp],['Opini Sudah Masuk',op.length],['Opini Belum Dibuat',nop],['Rekanan Sudah Dinilai',dn],['Rekanan Belum Dinilai',vs.length-dn]];
+const n=dist(op,r=>lvl(r.ikr));
+const list=op.filter(r=>!lv||lvl(r.ikr)==lv);
+const kd=dist(rows.filter(r=>r.kin!=null),r=>kinCat(r.kin)[1]);
+return `<h2>Ringkasan</h2><div class="sub">Penilaian Kinerja & Opini Penyedia Barang/Jasa · Periode Semester II 2026 · data dummy</div>
+<div class="kpis">${k.map(x=>`<div class="card kpi"><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div>
+<div class="row"><div class="card"><small style="color:var(--mut)">Summary Nilai untuk HK (Indeks Kepuasan Rekanan)</small><div class="big">${fx(hk)}</div>${bd(hc[0],hc[1])}<div class="note">IKR = Σ(Skor × Bobot) / Σ Bobot. Kategori: A ≥85, B 70–84, C 55–69, D &lt;55.</div></div>
+<div class="card"><b>Sebaran Level Nilai Opini</b><div class="chips"><button class="${!lv?'on':''}" onclick="lv=0;draw()">Semua</button>${[1,2,3,4,5].map(l=>`<button class="${lv==l?'on':''}" onclick="lv=${l};draw()">Level ${l}</button>`).join('')}</div>${bars(n,op.length,lv)}</div>
+<div class="card"><b>Sebaran Kategori Kinerja Rekanan</b>${[5,4,3,2,1].map(l=>{const t=kd.reduce((a,b)=>a+b,0),p=t?kd[l]/t*100:0;return `<div class="bar"><span>${['','Sangat Buruk','Buruk','Cukup','Baik','Sangat Baik'][l]}</span><span class="t"><i class="s${l}" style="width:${p}%"></i></span><b>${fx(p)}%</b></div>`}).join('')}<div class="note">&gt;90 Sangat Baik · 80–90 Baik · 65–80 Cukup · 50–65 Buruk · &lt;50 Sangat Buruk</div></div></div>
+<div class="card"><b>Opini ${lv?'Level '+lv+' ('+K[lv]+')':'seluruh level'}</b> <span class="sub">(${list.length})</span><div class="tw"><table><tr><th>Rekanan</th><th>Divisi</th><th>IKR</th><th>Level</th><th>Kategori</th></tr>${list.map(r=>`<tr><td>${r.v[0]}</td><td>${r.div}</td><td>${fx(r.ikr)}</td><td>${lvl(r.ikr)}</td><td>${bd(ikrCat(r.ikr)[0],ikrCat(r.ikr)[1])}</td></tr>`).join('')||'<tr><td colspan=5>Tidak ada data</td></tr>'}</table></div></div>`}
+function kontrak(j){
+const L=rows.filter(r=>r.v[1]==j),t=j=='BU'?'Badan Usaha':'Perorangan / Mandor';
+const tb=`<div class="tabs"><button class="${tab=='kin'?'on':''}" onclick="tab='kin';open=null;draw()">Penilaian Kontrak (Kinerja)</button><button class="${tab=='op'?'on':''}" onclick="tab='op';draw()">Opini Rekanan untuk HK</button></div>`;
+let body;
+if(tab=='kin'){
+body=`<div class="card tw"><table><tr><th>No. Kontrak</th><th>Rekanan</th><th>Klasifikasi</th><th>Divisi Pengguna</th><th>Nilai (Rp M)</th><th>Skor</th><th>Kategori</th></tr>${L.map(r=>{const c=kinCat(r.kin);return `<tr class="cl" onclick="open='${r.no}';draw()"><td>${r.no}</td><td>${r.v[0]}</td><td>${r.v[2]}</td><td>${r.div}</td><td>${fx(r.nilai)}</td><td>${r.kin??'–'}</td><td>${bd(c[0],c[1])}</td></tr>`}).join('')}</table></div><div class="note">Klik baris untuk melihat rincian bobot parameter (sesuai klasifikasi rekanan). Kinerja dinilai tiap 3 bulan untuk kontrak ≥ 6 bulan.</div>`;
+const r=L.find(x=>x.no==open);
+if(r){const w=KL.indexOf(r.v[2]),s=r.kin==null?null:lvl(r.kin);
+body+=`<div class="card" style="margin-top:12px"><b>${r.no} · ${r.v[0]}</b> <span class="sub">Bobot parameter – ${r.v[2]}</span><div class="tw"><table><tr><th>Parameter</th><th>Bobot</th><th>Skor (ilustrasi)</th></tr>${PW.map(p=>`<tr><td>${p[0]}</td><td>${p[1][w]}%</td><td>${s==null?'Belum dinilai':s+' / 5'}</td></tr>`).join('')}</table></div><div class="note">Penilai: sesuai Tabel Kewenangan Penilaian (mis. Project Manager → disetujui VP Operasi Divisi Terkait).</div></div>`}
+}else{
+body=`<div class="card tw"><table><tr><th>Rekanan</th><th>Divisi</th>${AS.map(a=>`<th>${a[0]} (${a[1]}%)</th>`).join('')}<th>IKR</th><th>Kategori</th></tr>${L.map(r=>{const c=ikrCat(r.ikr);return `<tr><td>${r.v[0]}</td><td>${r.div}</td>${AS.map((a,i)=>`<td>${r.as?bd(r.as[i],r.as[i]):'<span class="bd s0">–</span>'}</td>`).join('')}<td>${r.ikr==null?'Belum diisi':fx(r.ikr)}</td><td>${bd(c[0],c[1])}</td></tr>`}).join('')}</table></div><div class="note">Skala Likert 1–5 (skor 20–100). Opini diminta tiap Juni & Desember; rekanan mengisi maksimal 14 hari sejak permintaan.</div>`}
+return `<h2>Kontrak ${t}</h2><div class="sub">${L.length} kontrak · ${new Set(L.map(r=>r.vi)).size} rekanan</div>${tb}${body}`}
+function divisi(){
+const L=rows.filter(r=>r.div==dv),op=L.filter(r=>r.as),a=avg(op.map(r=>r.ikr)),c=ikrCat(op.length?a:null);
+return `<h2>Per Divisi · Monitoring Tindak Lanjut Opini Rekanan</h2><div class="sub">Pilih divisi pengguna barang/jasa (sesuai isian form Opini Rekanan)</div>
+<select onchange="dv=this.value;draw()">${divs.map(d=>`<option ${d==dv?'selected':''}>${d}</option>`).join('')}</select>
+<div class="kpis" style="margin-top:12px"><div class="card kpi"><small>Kontrak</small><b>${L.length}</b></div><div class="card kpi"><small>Opini masuk</small><b>${op.length}</b></div><div class="card kpi"><small>Opini belum</small><b>${L.length-op.length}</b></div><div class="card kpi"><small>Rata-rata IKR</small><b>${op.length?fx(a):'–'}</b> ${bd(c[0],c[1])}</div></div>
+<div class="card tw"><b>Opini & Nilai</b><table><tr><th>Rekanan</th><th>IKR</th><th>Level</th><th>Kategori</th></tr>${L.map(r=>`<tr><td>${r.v[0]}</td><td>${r.ikr==null?'Belum diisi':fx(r.ikr)}</td><td>${r.ikr==null?'–':lvl(r.ikr)}</td><td>${bd(ikrCat(r.ikr)[0],ikrCat(r.ikr)[1])}</td></tr>`).join('')}</table></div>
+<div class="card tw" style="margin-top:12px"><b>Monitoring Tindak Lanjut Opini Rekanan</b><table><tr><th>No</th><th>Temuan / Hasil Survei</th><th>Akar Masalah</th><th>Rencana Perbaikan (Corrective)</th><th>Penanggung Jawab</th><th>Target</th><th>Status</th></tr>${L.filter(r=>r.tl).map((r,i)=>`<tr><td>${i+1}</td><td>${r.tl[0]}<br><small style="color:var(--mut)">${r.v[0]}</small></td><td>${r.tl[1]}</td><td>${r.tl[2]}</td><td>${r.tl[3]}</td><td>${r.tl[4]}</td><td>${bd(r.tl[5],r.tl[5]=='Closed'?5:r.tl[5]=='Open'?1:3)}</td></tr>`).join('')||'<tr><td colspan=7>Belum ada temuan untuk divisi ini</td></tr>'}</table></div>`}
+function draw(){menu();$('#main').innerHTML=view=='ringkasan'?ringkasan():view=='divisi'?divisi():kontrak(view)}
+draw();
+</script></body></html>
